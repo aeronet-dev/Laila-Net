@@ -1,7 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.laila_net">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Izin Akses Internet dan Status Jaringan (Fokus Data Seluler) -->
+    <!-- Izin Akses Internet dan Status Jaringan -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
@@ -14,8 +13,6 @@
     <application
         android:label="Laila Net"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:usesCleartextTraffic="true">
         
         <activity
