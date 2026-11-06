@@ -1,8 +1,100 @@
 import 'package:flutter/material.dart';
-import 'dashboard_page.dart'; // Impor halaman dashboard tujuan
+import 'dashboard_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
+
+  // Fungsi simulasi pop-up Login Google
+  void _handleGoogleLogin(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Login Google', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Membuka jendela akun Google untuk autentikasi...',
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.red)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog
+              // Lanjut ke Dashboard setelah sukses
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardPage()),
+              );
+            },
+            child: const Text('Lanjutkan', style: TextStyle(color: Colors.black)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Fungsi simulasi input nomor WhatsApp untuk OTP
+  void _handleWhatsAppLogin(BuildContext context) {
+    final TextEditingController phoneController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Login OTP WhatsApp', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Masukkan nomor WhatsApp Anda untuk menerima kode OTP:',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Contoh: 08123456789',
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: const Color(0xFF101927),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.red)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog input
+              // Simulasi OTP terkirim / Berhasil masuk ke dashboard
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Kode OTP terkirim ke WhatsApp!')),
+              );
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardPage()),
+              );
+            },
+            child: const Text('Kirim OTP', style: TextStyle(color: Colors.black)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +106,6 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo atau Ikon Utama
               Container(
                 width: 100,
                 height: 100,
@@ -28,7 +119,7 @@ class WelcomePage extends StatelessWidget {
               const SizedBox(height: 30),
               
               const Text(
-                'Selamat Datang di\nAvenet',
+                'Selamat Datang di\nLaila Net',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -56,13 +147,7 @@ class WelcomePage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // Simulasi Login Google Sukses -> Masuk ke Dashboard
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const DashboardPage()),
-                    );
-                  },
+                  onPressed: () => _handleGoogleLogin(context),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
@@ -89,13 +174,7 @@ class WelcomePage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // Simulasi Login OTP WhatsApp Sukses -> Masuk ke Dashboard
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const DashboardPage()),
-                    );
-                  },
+                  onPressed: () => _handleWhatsAppLogin(context),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
