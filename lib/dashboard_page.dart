@@ -11,7 +11,7 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isConnected = false;
   bool _isLoading = false;
 
-  // Simulasi status data seluler perangkat (bisa diintegrasikan dengan package connectivity_plus)
+  // Simulasi status data seluler perangkat
   final bool _isCellularOn = true; 
 
   void _toggleConnection() async {
@@ -73,7 +73,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               child: Row(
                 children: [
-                  // Ikon sinyal berubah hijau dan aktif saat VPN terhubung
                   Icon(
                     _isConnected ? Icons.signal_cellular_connected_no_internet_4_bar : Icons.signal_cellular_alt,
                     size: 14,
@@ -108,7 +107,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 border: Border.all(color: Colors.cyan.withOpacity(0.5)),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
                   Text('Masa Aktif:', style: TextStyle(color: Colors.grey, fontSize: 14)),
                   Text('5 Menit Aktif', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold, fontSize: 16)),
@@ -127,7 +126,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 border: Border.all(color: Colors.cyan.withOpacity(0.3)),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
