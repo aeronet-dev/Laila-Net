@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'api_service.dart';
-import 'vpn_service.dart';
-import 'store_page.dart';
-import 'profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -12,273 +8,193 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  int _currentIndex = 0;
+  bool _isConnected = false;
+  bool _isLoading = false;
 
-  final List<Widget> _pages = [
-    const VpnHomeTab(),
-    const StorePage(),
-    const ProfilePage(),
-  ];
+  void _toggleConnection() {
+    setState(() {
+      _isLoading = true;
+    });
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        backgroundColor: const Color(0xFF1E293B),
-        selectedItemColor: Colors.cyan,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shield),
-            label: 'VPN',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.store),
-            label: 'Toko',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Akun',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class VpnHomeTab extends StatefulWidget {
-  const VpnHomeTab({super.key});
-
-  @override
-  State<VpnHomeTab> createState() => _VpnHomeTabState();
-}
-
-class _VpnHomeTabState extends State<VpnHomeTab> {
-  void _toggleVpn() async {
-    if (VpnService.isConnected) {
-      VpnService.disconnect();
-      setState(() {});
+    // Simulasi proses koneksi VPN (Nanti diganti fungsi asli VPN core)
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        _isLoading = false;
+        _isConnected = !_isConnected;
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('VPN Diputus.'), backgroundColor: Colors.grey),
+        SnackBar(
+          content: Text(_isConnected ? 'Terhubung ke Laila Net!' : 'Koneksi diputus.'),
+          backgroundColor: _isConnected ? Colors.green : Colors.orange,
+        ),
       );
-    } else {
-      if (ApiService.sisaWaktu <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Masa aktif habis! Isi ulang di menu Toko atau klaim Free Trial.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      bool success = await VpnService.connect(
-        () {
-          // Callback saat menit berkurang (Update UI)
-          if (mounted) setState(() {});
-        },
-        () {
-          // Callback saat waktu mendadak habis
-          if (mounted) {
-            setState(() {});
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Masa aktif VPN habis! Koneksi terputus.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-      );
-
-      if (success) {
-        setState(() {});
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Menghubungkan ke Server VLESS Avenet...'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isConnected = VpnService.isConnected;
-
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF101927),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Avenet VPN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        centerTitle: false,
+        backgroundColor: const Color(0xFF101927),
+        elevation: 0,
+        title: const Text(
+          'Laila Net',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.cyanAccent),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.signal_cellular_alt, color: Colors.cyanAccent, size: 14),
-                    SizedBox(width: 4),
-                    Text('24 ms', style: TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-                  ],
-                ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.cyan.withOpacity(0.5)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.signal_cellular_alt, size: 14, color: Colors.cyan),
+                  SizedBox(width: 6),
+                  Text('24 ms', style: TextStyle(color: Colors.white, fontSize: 12)),
+                ],
               ),
             ),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            // Status Sisa Waktu
+            // Kartu Masa Aktif
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: ApiService.sisaWaktu > 0 ? Colors.greenAccent : Colors.redAccent,
-                  width: 1.5,
-                ),
+                border: Border.all(color: Colors.cyan.withOpacity(0.5)),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Masa Aktif:', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  Text(
-                    ApiService.sisaWaktu > 0 
-                        ? '${ApiService.sisaWaktu.toStringAsFixed(0)} Menit Aktif' 
-                        : 'Habis / Belum Aktif',
-                    style: TextStyle(
-                      color: ApiService.sisaWaktu > 0 ? Colors.greenAccent : Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
+                mainAxisAlignment: MainAxisAlignment.between,
+                children: const [
+                  Text('Masa Aktif:', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text('5 Menit Aktif', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold, fontSize: 16)),
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
-            // Tombol Klaim Free Trial
-            InkWell(
-              onTap: () {
-                setState(() {
-                  bool success = ApiService.claimFreeTrial();
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Berhasil klaim Free Trial 30 Menit!'), backgroundColor: Colors.green),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Free Trial sudah pernah diklaim!'), backgroundColor: Colors.orange),
-                    );
-                  }
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  border: Border.all(color: Colors.cyan, width: 1.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.card_giftcard, color: Colors.cyan),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Klaim Free Trial 30 Menit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 2),
-                          Text('Khusus Pengguna Baru (Tanpa Kuota)', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward_ios, color: Colors.cyan, size: 16),
-                  ],
-                ),
+            // Banner Free Trial
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.cyan.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.between,
+                children: const [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Klaim Free Trial 30 Menit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text('Khusus Pengguna Baru (Tanpa Kuota)', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.cyan),
+                ],
               ),
             ),
+            
             const Spacer(),
 
-            // Indikator VPN
+            // Indikator Lingkaran Status VPN
             Center(
               child: Container(
-                width: 180,
-                height: 180,
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isConnected ? Colors.greenAccent : Colors.redAccent,
+                    color: _isConnected ? Colors.green : Colors.redAccent,
                     width: 4,
                   ),
+                  color: const Color(0xFF1E293B).withOpacity(0.5),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      isConnected ? Icons.lock : Icons.lock_open,
-                      size: 48,
-                      color: isConnected ? Colors.greenAccent : Colors.redAccent,
+                      _isConnected ? Icons.lock_open : Icons.lock,
+                      size: 50,
+                      color: _isConnected ? Colors.green : Colors.redAccent,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
-                      isConnected ? 'TERHUBUNG' : 'OFFLINE',
+                      _isConnected ? 'ONLINE' : 'OFFLINE',
                       style: TextStyle(
-                        color: isConnected ? Colors.greenAccent : Colors.redAccent,
+                        color: _isConnected ? Colors.green : Colors.redAccent,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 18,
+                        letterSpacing: 2,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isConnected ? 'Terhubung' : 'Terputus',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              isConnected ? 'Terhubung ke VPS VLESS Ubuntu' : 'Terputus',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-            ),
+
             const Spacer(),
 
-            // Tombol Utama
+            // Tombol Hubungkan / Putuskan
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isConnected ? Colors.redAccent : Colors.cyan,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: Colors.cyan,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                onPressed: _toggleVpn,
-                child: Text(
-                  isConnected ? 'Putuskan Sambungan' : 'Hubungkan Sekarang',
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
+                onPressed: _isLoading ? null : _toggleConnection,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.black)
+                    : Text(
+                        _isConnected ? 'Putuskan Koneksi' : 'Hubungkan Sekarang',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
+            const SizedBox(height: 10),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFF101927),
+        selectedItemColor: Colors.cyan,
+        unselectedItemColor: Colors.grey,
+        currentIndex: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.shield), label: 'VPN'),
+          BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Toko'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Akun'),
+        ],
       ),
     );
   }
