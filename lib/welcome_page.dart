@@ -1,97 +1,70 @@
 import 'package:flutter/material.dart';
 import 'dashboard_page.dart';
 
-class WelcomePage extends StatelessWidget {
+class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
 
-  // Fungsi simulasi pop-up Login Google
-  void _handleGoogleLogin(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Login Google', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Membuka jendela akun Google untuk autentikasi...',
-          style: TextStyle(color: Colors.grey),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: Colors.red)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
-            onPressed: () {
-              Navigator.pop(context); // Tutup dialog
-              // Lanjut ke Dashboard setelah sukses
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const DashboardPage()),
-              );
-            },
-            child: const Text('Lanjutkan', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    );
+  @override
+  State<WelcomePage> createState() => _WelcomePageState();
+}
+
+class _WelcomePageState extends State<WelcomePage> {
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
   }
 
-  // Fungsi simulasi input nomor WhatsApp untuk OTP
-  void _handleWhatsAppLogin(BuildContext context) {
-    final TextEditingController phoneController = TextEditingController();
+  void _processLogin() async {
+    String phone = _phoneController.text.trim();
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Login OTP WhatsApp', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Masukkan nomor WhatsApp Anda untuk menerima kode OTP:',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Contoh: 08123456789',
-                hintStyle: const TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: const Color(0xFF101927),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ],
+    // 1. Validasi Input Kosong
+    if (phone.isEmpty) {
+      _showErrorSnackBar('Masukkan nomor HP Anda!');
+      return;
+    }
+
+    // 2. Validasi Format Nomor Indonesia (Harus diawali 08/628 dan panjang 10-14 digit)
+    RegExp idPhoneRegex = RegExp(r'^(08|628|\+628)[0-9]{8,11}$');
+    if (!idPhoneRegex.hasMatch(phone)) {
+      _showErrorSnackBar('Nomor HP tidak valid! Gunakan format 08xxxxxxxxx');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulasi Cek Keamanan / Pengecekan Database
+    await Future.delayed(const Duration(seconds: 1));
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    // 3. Jika nomor valid & terverifikasi, langsung masuk ke Dashboard
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Selamat datang, $phone!'),
+          backgroundColor: Colors.green,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: Colors.red)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
-            onPressed: () {
-              Navigator.pop(context); // Tutup dialog input
-              // Simulasi OTP terkirim / Berhasil masuk ke dashboard
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Kode OTP terkirim ke WhatsApp!')),
-              );
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const DashboardPage()),
-              );
-            },
-            child: const Text('Kirim OTP', style: TextStyle(color: Colors.black)),
-          ),
-        ],
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardPage()),
+      );
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -101,94 +74,99 @@ class WelcomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF101927),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF1E293B),
-                  border: Border.all(color: Colors.cyan, width: 2),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo Utama Laila Net
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF1E293B),
+                    border: Border.all(color: Colors.cyan, width: 2),
+                  ),
+                  child: const Icon(Icons.shield, size: 50, color: Colors.cyan),
                 ),
-                child: const Icon(Icons.shield, size: 50, color: Colors.cyan),
-              ),
-              const SizedBox(height: 30),
-              
-              const Text(
-                'Selamat Datang di\nLaila Net',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 30),
+                
+                const Text(
+                  'Selamat Datang di\nLaila Net',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              
-              const Text(
-                'Nikmati akses internet cepat, aman, dan terenkripsi. Silakan masuk menggunakan akun Anda.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(height: 50),
+                const SizedBox(height: 12),
+                
+                const Text(
+                  'Masukkan nomor telepon kartu aktif Anda untuk mengakses layanan internet aman.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                const SizedBox(height: 40),
 
-              // Tombol Login Google
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
+                // Form Input Nomor Telepon
+                TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.phone_android, color: Colors.cyan),
+                    hintText: 'Contoh: 08123456789',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.cyan),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.cyan, width: 2),
                     ),
                   ),
-                  onPressed: () => _handleGoogleLogin(context),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.g_mobiledata, size: 30, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text(
-                        'Lanjutkan dengan Google',
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-              // Tombol Login OTP WhatsApp
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.cyan, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => _handleWhatsAppLogin(context),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.chat, size: 20, color: Colors.cyan),
-                      SizedBox(width: 8),
-                      Text(
-                        'Masuk via OTP WhatsApp',
-                        style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold, fontSize: 15),
+                // Tombol Masuk / Masuk Layanan
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyan,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
+                    ),
+                    onPressed: _isLoading ? null : _processLogin,
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.black)
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.login, color: Colors.black),
+                              SizedBox(width: 8),
+                              Text(
+                                'Masuk ke Layanan',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
