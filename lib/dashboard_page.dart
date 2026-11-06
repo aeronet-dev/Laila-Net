@@ -11,25 +11,41 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isConnected = false;
   bool _isLoading = false;
 
-  void _toggleConnection() {
+  // Simulasi status data seluler perangkat (bisa diintegrasikan dengan package connectivity_plus)
+  final bool _isCellularOn = true; 
+
+  void _toggleConnection() async {
+    // 1. Pastikan Data Seluler aktif (ON) sebelum menghubungkan
+    if (!_isCellularOn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harap aktifkan Data Seluler terlebih dahulu!'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    // Simulasi proses koneksi VPN (Nanti diganti fungsi asli VPN core)
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-        _isConnected = !_isConnected;
-      });
-      
+    // Simulasi proses koneksi VPN (meskipun kuota 0/OPOK, tetap berjalan)
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _isLoading = false;
+      _isConnected = !_isConnected;
+    });
+
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_isConnected ? 'Terhubung ke Laila Net!' : 'Koneksi diputus.'),
           backgroundColor: _isConnected ? Colors.green : Colors.orange,
         ),
       );
-    });
+    }
   }
 
   @override
@@ -51,13 +67,27 @@ class _DashboardPageState extends State<DashboardPage> {
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.cyan.withOpacity(0.5)),
+                border: Border.all(
+                  color: _isConnected ? Colors.green : Colors.cyan.withOpacity(0.5),
+                ),
               ),
               child: Row(
-                children: const [
-                  Icon(Icons.signal_cellular_alt, size: 14, color: Colors.cyan),
-                  SizedBox(width: 6),
-                  Text('24 ms', style: TextStyle(color: Colors.white, fontSize: 12)),
+                children: [
+                  // Ikon sinyal berubah hijau dan aktif saat VPN terhubung
+                  Icon(
+                    _isConnected ? Icons.signal_cellular_connected_no_internet_4_bar : Icons.signal_cellular_alt,
+                    size: 14,
+                    color: _isConnected ? Colors.green : Colors.cyan,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _isConnected ? 'Aktif' : '24 ms',
+                    style: TextStyle(
+                      color: _isConnected ? Colors.green : Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
