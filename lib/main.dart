@@ -25,7 +25,7 @@ class LailaNetApp extends StatelessWidget {
   }
 }
 
-// Halaman Pengecekan Sesi Awal
+// 1. Pengecekan Sesi Login saat Aplikasi Dibuka
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -37,28 +37,28 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLoginSession();
+    _checkLoginStatus();
   }
 
-  Future<void> _checkLoginSession() async {
+  Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedPhone = prefs.getString('user_phone');
+    final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
 
-    await Future.delayed(const Duration(seconds: 1)); // Efek loading sebentar
+    await Future.delayed(const Duration(seconds: 1)); // Efek splash
 
     if (!mounted) return;
 
-    if (savedPhone != null && savedPhone.isNotEmpty) {
-      // Jika sudah pernah login, langsung ke menu utama
+    if (isLoggedIn) {
+      // Jika sudah terdaftar/login, langsung ke Dasbor Utama
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainNavigation()),
       );
     } else {
-      // Jika belum, ke halaman Welcome / Login
+      // Jika belum login / habis logout, ke Halaman Auth
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const WelcomePage()),
+        MaterialPageRoute(builder: (context) => const AuthPage()),
       );
     }
   }
@@ -74,38 +74,65 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class WelcomePage extends StatefulWidget {
-  const WelcomePage({super.key});
+// 2. Halaman Auth (Daftar / Masuk Akun)
+class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});
 
   @override
-  State<WelcomePage> createState() => _WelcomePageState();
+  State<AuthPage> createState() => _AuthPageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> {
+class _AuthPageState extends State<AuthPage> {
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  bool _isRegister = true; // Toggle Daftar vs Masuk
 
-  Future<void> _login() async {
+  // Validasi Format Nomor HP Indonesia
+  bool _isValidPhone(String phone) {
+    final regExp = RegExp(r'^(\+62|62|0)8[1-9][0-9]{7,11}$');
+    return regExp.hasMatch(phone);
+  }
+
+  Future<void> _handleAuth() async {
+    final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Masukkan nomor telepon terlebih dahulu!'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+
+    if (_isRegister && name.isEmpty) {
+      _showError('Masukkan nama lengkap Anda!');
       return;
     }
 
-    // Simpan nomor HP ke SharedPreferences
+    if (!_isValidPhone(phone)) {
+      _showError('Masukkan nomor HP yang valid (Contoh: 08123456789)');
+      return;
+    }
+
+    // Simpan Akun secara Permanen di HP
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_logged_in', true);
     await prefs.setString('user_phone', phone);
+    if (_isRegister) {
+      await prefs.setString('user_name', name);
+    }
 
     if (!mounted) return;
 
-    // Masuk ke halaman utama
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isRegister ? 'Pendaftaran Akun Berhasil!' : 'Berhasil Masuk!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const MainNavigation()),
+    );
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -121,37 +148,60 @@ class _WelcomePageState extends State<WelcomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.cyan, width: 3),
                   ),
-                  child: const Icon(Icons.shield, size: 50, color: Colors.cyan),
+                  child: const Icon(Icons.shield, size: 45, color: Colors.cyan),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Selamat Datang di\nLaila Net',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
+                const SizedBox(height: 20),
+                Text(
+                  _isRegister ? 'Daftar Akun Laila Net' : 'Masuk ke Laila Net',
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Masukkan nomor telepon kartu aktif Anda untuk mengakses layanan internet aman.',
+                const SizedBox(height: 8),
+                Text(
+                  _isRegister
+                      ? 'Buat akun sekali untuk menikmati koneksi aman.'
+                      : 'Masukkan nomor HP terdaftar Anda.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
+
+                // Input Nama (Hanya saat Registrasi)
+                if (_isRegister) ...[
+                  TextField(
+                    controller: _nameController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Nama Lengkap',
+                      hintStyle: TextStyle(color: Colors.grey.shade600),
+                      filled: true,
+                      fillColor: const Color(0xFF1E293B),
+                      prefixIcon: const Icon(Icons.person, color: Colors.cyan),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                // Input Nomor HP
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Contoh: 08123456789',
+                    hintText: 'Nomor Telepon (Contoh: 08123456789)',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     filled: true,
                     fillColor: const Color(0xFF1E293B),
@@ -162,7 +212,9 @@ class _WelcomePageState extends State<WelcomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
+
+                // Tombol Submit
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -173,15 +225,31 @@ class _WelcomePageState extends State<WelcomePage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: _login,
-                    child: const Text(
-                      'Masuk ke Layanan',
-                      style: TextStyle(
+                    onPressed: _handleAuth,
+                    child: Text(
+                      _isRegister ? 'Daftar Sekarang' : 'Masuk',
+                      style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Switcher Mode (Daftar / Masuk)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isRegister = !_isRegister;
+                    });
+                  },
+                  child: Text(
+                    _isRegister
+                        ? 'Sudah punya akun? Masuk di sini'
+                        : 'Belum punya akun? Daftar di sini',
+                    style: const TextStyle(color: Colors.cyan),
                   ),
                 ),
               ],
@@ -193,6 +261,7 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 }
 
+// 3. Sistem Navigasi Utama (Hanya 1 BottomNavBar)
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -212,7 +281,10 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF101927),
         selectedItemColor: Colors.cyan,
