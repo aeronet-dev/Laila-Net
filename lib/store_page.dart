@@ -26,7 +26,6 @@ class _StorePageState extends State<StorePage> {
     });
   }
 
-  // Klaim Free Trial 30 Menit (Hanya 1 kali seumur hidup aplikasi per perangkat)
   Future<void> _claimFreeTrial() async {
     final prefs = await SharedPreferences.getInstance();
     bool claimed = prefs.getBool('has_claimed_trial') ?? false;
@@ -44,7 +43,6 @@ class _StorePageState extends State<StorePage> {
 
     await prefs.setInt('remaining_seconds', totalSeconds);
     await prefs.setBool('has_claimed_trial', true);
-    await prefs.setString('active_package_name', 'Paket Free Trial (Aktif)');
 
     setState(() {
       _hasClaimedTrial = true;
@@ -56,7 +54,6 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  // Redeem / Aktivasi Voucher Kode
   Future<void> _activateVoucher() async {
     String code = _voucherController.text.trim().toUpperCase();
 
@@ -67,7 +64,6 @@ class _StorePageState extends State<StorePage> {
       return;
     }
 
-    // Simulasi database kode voucher nyata (Dapat dihubungkan ke backend 3x-ui / API Anda)
     int addedMinutes = 0;
     if (code == 'LAILANET1H') {
       addedMinutes = 60;
@@ -87,7 +83,6 @@ class _StorePageState extends State<StorePage> {
     int totalSeconds = currentSeconds + (addedMinutes * 60);
 
     await prefs.setInt('remaining_seconds', totalSeconds);
-    await prefs.setString('active_package_name', 'Paket Voucher ($code)');
     _voucherController.clear();
 
     if (!mounted) return;
@@ -110,7 +105,6 @@ class _StorePageState extends State<StorePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Kotak Banner Free Trial
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -144,8 +138,6 @@ class _StorePageState extends State<StorePage> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Form Masukkan Kode Voucher
             const Text('Aktivasi Voucher', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             TextField(
@@ -174,8 +166,6 @@ class _StorePageState extends State<StorePage> {
               ),
             ),
             const SizedBox(height: 30),
-
-            // Kotak Hubungi Admin via WhatsApp
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
