@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -13,11 +14,32 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isConnected = false;
   int _remainingSeconds = 0;
   Timer? _countdownTimer;
+  
+  late FlutterV2ray flutterV2ray;
+  bool _isV2rayReady = false;
+
+  // Masukkan link VLESS dari panel 3x-ui Anda di sini:
+  final String _vlessConfig = "vless://1d643b7c-dbfe-496a-afa9-6af2326ab510@aeronet-dev.github.io:443?encryption=none&security=tls&type=ws&path=%2F#LailaNet-VLESS";
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _initV2RayCore();
+  }
+
+  void _initV2RayCore() async {
+    flutterV2ray = FlutterV2ray(
+      onStatusChanged: (status) {
+        setState(() {
+          _isConnected = status.state == "CONNECTED";
+        });
+      },
+    );
+    await flutterV2ray.initializeV2Ray();
+    setState(() {
+      _isV2rayReady = true;
+    });
   }
 
   @override
@@ -44,12 +66,12 @@ class _DashboardPageState extends State<DashboardPage> {
         await prefs.setInt('remaining_seconds', _remainingSeconds);
       } else {
         timer.cancel();
-        _disconnectVpn();
+        _toggleVpnConnection();
       }
     });
   }
 
-  void _toggleConnection() {
+  Future<void> _toggleVpnConnection() async {
     if (_remainingSeconds <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -60,28 +82,41 @@ class _DashboardPageState extends State<DashboardPage> {
       return;
     }
 
-    setState(() {
-      _isConnected = !_isConnected;
-    });
+    if (!_isV2rayReady) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Menyiapkan Engine VLESS...'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
 
     if (_isConnected) {
-      _startTimer();
+      await flutterV2ray.stopV2Ray();
+      _countdownTimer?.cancel();
+      setState(() {
+        _isConnected = false;
+      });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('VPN Terhubung ke Server Laila Net'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Koneksi VLESS Diputus'), backgroundColor: Colors.orange),
       );
     } else {
-      _countdownTimer?.cancel();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Koneksi VPN Diputus'), backgroundColor: Colors.orange),
-      );
+      if (await flutterV2ray.requestPermission()) {
+        await flutterV2ray.startV2Ray(
+          remark: "Laila Net VLESS",
+          config: _vlessConfig,
+          proxyPort: 10808,
+          bypassSubnets: [],
+        );
+        _startTimer();
+        setState(() {
+          _isConnected = true;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('VLESS Terhubung ke Server Laila Net!'), backgroundColor: Colors.green),
+        );
+      }
     }
-  }
-
-  void _disconnectVpn() {
-    setState(() {
-      _isConnected = false;
-    });
-    _countdownTimer?.cancel();
   }
 
   String _formatTime(int seconds) {
@@ -117,7 +152,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   Icon(Icons.signal_cellular_alt, size: 16, color: Colors.cyan),
                   SizedBox(width: 4),
-                  Text('24 ms', style: TextStyle(color: Colors.white, fontSize: 12)),
+                  Text('VLESS', style: TextStyle(color: Colors.white, fontSize: 12)),
                 ],
               ),
             ),
@@ -155,7 +190,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Expanded(
               child: Center(
                 child: GestureDetector(
-                  onTap: _toggleConnection,
+                  onTap: _toggleVpnConnection,
                   child: Container(
                     width: 220,
                     height: 220,
@@ -194,7 +229,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _isConnected ? 'Terhubung' : 'Terputus',
+                          _isConnected ? 'VLESS Connected' : 'Terputus',
                           style: const TextStyle(color: Colors.grey, fontSize: 13),
                         ),
                       ],
@@ -211,7 +246,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   backgroundColor: _isConnected ? Colors.redAccent : Colors.cyan,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _toggleConnection,
+                onPressed: _toggleVpnConnection,
                 child: Text(
                   _isConnected ? 'Putuskan Koneksi' : 'Hubungkan Sekarang',
                   style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
