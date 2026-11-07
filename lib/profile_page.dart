@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart'; // Untuk membuka link/WhatsApp
-import 'main.dart';
+import 'url_launcher_helper.dart';
+import 'main.dart'; // Untuk mengarahkan kembali ke AuthPage
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,44 +12,28 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String _userName = 'Pengguna Laila Net';
-  String _userPhone = '-';
+  String _userPhone = '085890014896';
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadProfileData();
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userName = prefs.getString('user_name') ?? 'Pengguna Laila Net';
-      _userPhone = prefs.getString('user_phone') ?? '-';
+      _userPhone = prefs.getString('user_phone') ?? '085890014896';
     });
   }
 
-    // Fungsi untuk membuka WhatsApp Admin
-  Future<void> _contactAdmin() async {
-    // Nomor WhatsApp sudah disesuaikan ke +6285890014896 (format internasional tanpa tanda +)
-    final whatsappUrl = Uri.parse('https://wa.me/6285890014896?text=Halo%20Admin%20Laila%20Net,%20saya%20mengalami%20kendala%20pada%20aplikasi.');
-    
-    if (await canLaunchUrl(whatsappUrl)) {
-      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka WhatsApp'), backgroundColor: Colors.redAccent),
-      );
-    }
-  }
-
-
-  Future<void> _logout() async {
+  // Fungsi Keluar Akun (Logout) Nyata
+  Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Hapus sesi login
+    await prefs.clear(); // Menghapus sesi login dan data lokal tersimpan
 
     if (!mounted) return;
-
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const AuthPage()),
@@ -64,142 +48,104 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF101927),
         elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          'Akun Saya',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Akun Saya', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: ListView(
+      body: Padding(
         padding: const EdgeInsets.all(20.0),
-        children: [
-          // Bagian Profil Header
-          Center(
-            child: Column(
-              children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.cyan,
-                  child: Icon(Icons.person, size: 50, color: Colors.black),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _userName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _userPhone,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // Menu Bantuan / Hubungi Admin
-          ListTile(
-            tileColor: const Color(0xFF1E293B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            leading: const Icon(Icons.support_agent, color: Colors.cyan),
-            title: const Text(
-              'Pusat Bantuan / Hubungi Admin',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            subtitle: const Text(
-              'Laporkan kendala koneksi atau voucher via WhatsApp',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.cyan, size: 16),
-            onTap: _contactAdmin,
-          ),
-          const SizedBox(height: 12),
-
-          // Menu Panduan / FAQ Sederhana
-          ListTile(
-            tileColor: const Color(0xFF1E293B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            leading: const Icon(Icons.help_outline, color: Colors.cyan),
-            title: const Text(
-              'Panduan & FAQ',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            subtitle: const Text(
-              'Cara menggunakan aplikasi & klaim voucher',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.cyan, size: 16),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF1E293B),
-                  title: const Text('Panduan Penggunaan', style: TextStyle(color: Colors.white)),
-                  content: const Text(
-                    '1. Pastikan masa aktif Anda mencukupi.\n'
-                    '2. Tekan "Hubungkan Sekarang" pada menu VPN untuk memulai koneksi aman.\n'
-                    '3. Masukkan kode voucher di menu Toko untuk memperpanjang masa aktif.',
-                    style: TextStyle(color: Colors.grey, height: 1.5),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Tutup', style: TextStyle(color: Colors.cyan)),
+        child: Column(
+          children: [
+            // Info Profil Pengguna
+            Center(
+              child: Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF1E293B),
+                      border: Border.all(color: Colors.cyan, width: 2),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-
-          // Menu Logout
-          ListTile(
-            tileColor: const Color(0xFF1E293B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            leading: const Icon(Icons.logout, color: Colors.redAccent),
-            title: const Text(
-              'Keluar Akun (Logout)',
-              style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-            ),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF1E293B),
-                  title: const Text('Keluar Akun', style: TextStyle(color: Colors.white)),
-                  content: const Text(
-                    'Apakah Anda yakin ingin keluar dari akun ini?',
-                    style: TextStyle(color: Colors.grey),
+                    child: const Icon(Icons.person, size: 40, color: Colors.cyan),
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(_userPhone, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // Tombol Menu Bantuan WhatsApp
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.cyan.withOpacity(0.2)),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.support_agent, color: Colors.cyan),
+                title: const Text('Pusat Bantuan / Hubungi Admin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: const Text('Laporkan kendala koneksi atau voucher', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                onTap: () => UrlLauncherHelper.openWhatsApp('6285890014896', 'Halo Admin Laila Net, saya butuh bantuan kendala aplikasi.'),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Tombol Panduan & FAQ
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.cyan.withOpacity(0.2)),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.help_outline, color: Colors.cyan),
+                title: const Text('Panduan & FAQ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: const Text('Cara menggunakan aplikasi & klaim voucher', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: const Color(0xFF1E293B),
+                      title: const Text('Panduan Laila Net', style: TextStyle(color: Colors.white)),
+                      content: const Text(
+                        '1. Klaim Free Trial 30 Menit di menu Toko bagi pengguna baru.\n\n'
+                        '2. Masukkan kode voucher jika Anda membelinya dari admin.\n\n'
+                        '3. Tekan Hubungkan Sekarang pada tab VPN untuk mulai menjelajah.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Tutup', style: TextStyle(color: Colors.cyan)),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _logout();
-                      },
-                      child: const Text('Keluar', style: TextStyle(color: Colors.redAccent)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Tombol Keluar Akun (Logout)
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: const Text('Keluar Akun (Logout)', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                onTap: () => _logout(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
