@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'url_launcher_helper.dart';
-import 'main.dart'; // Untuk mengarahkan kembali ke AuthPage
+import 'main.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,10 +28,9 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  // Fungsi Keluar Akun (Logout) Nyata
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Menghapus sesi login dan data lokal tersimpan
+    await prefs.clear();
 
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
@@ -54,7 +53,6 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            // Info Profil Pengguna
             Center(
               child: Column(
                 children: [
@@ -76,8 +74,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 30),
-
-            // Tombol Menu Bantuan WhatsApp
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
@@ -93,8 +89,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 14),
-
-            // Tombol Panduan & FAQ
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
@@ -130,13 +124,11 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 14),
-
-            // Tombol Keluar Akun (Logout)
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
               ),
               child: ListTile(
                 leading: const Icon(Icons.logout, color: Colors.redAccent),
