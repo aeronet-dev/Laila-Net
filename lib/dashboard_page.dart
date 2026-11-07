@@ -13,7 +13,6 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isConnected = false;
   int _remainingSeconds = 0;
   Timer? _countdownTimer;
-  String _activePackageName = "Memuat Status...";
 
   @override
   void initState() {
@@ -27,21 +26,13 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
-  // Muat data masa aktif dan status dari SharedPreferences
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _remainingSeconds = prefs.getInt('remaining_seconds') ?? 0;
-      _activePackageName = prefs.getString('active_package_name') ?? (_remainingSeconds > 0 ? "Paket Aktif" : "Tidak Ada Paket Aktif");
     });
-
-    // Jika waktu masih ada, pastikan timer berjalan
-    if (_remainingSeconds > 0 && !_isConnected) {
-      // Otomatis siap/aktif jika waktu tersedia
-    }
   }
 
-  // Mulai Hitung Mundur Nyata (Timer.periodic)
   void _startTimer() {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
@@ -54,9 +45,6 @@ class _DashboardPageState extends State<DashboardPage> {
       } else {
         timer.cancel();
         _disconnectVpn();
-        setState(() {
-          _activePackageName = "Masa Aktif Habis";
-        });
       }
     });
   }
@@ -96,11 +84,10 @@ class _DashboardPageState extends State<DashboardPage> {
     _countdownTimer?.cancel();
   }
 
-  // Format detik ke bentuk Menit / Jam
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
     final remainingSecs = seconds % 60;
-    if (minutes > 60) {
+    if (minutes >= 60) {
       final hours = minutes ~/ 60;
       final mins = minutes % 60;
       return '$hours Jam $mins Menit Aktif';
@@ -141,7 +128,6 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            // Kotak Masa Aktif
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -166,8 +152,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             const SizedBox(height: 40),
-
-            // Tombol Status Lingkaran Utama VPN
             Expanded(
               child: Center(
                 child: GestureDetector(
@@ -219,8 +203,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
             ),
-
-            // Tombol Aksi Bawah
             SizedBox(
               width: double.infinity,
               height: 50,
