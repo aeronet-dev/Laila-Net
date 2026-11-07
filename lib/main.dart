@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_page.dart';
 import 'store_page.dart';
 import 'profile_page.dart';
@@ -19,7 +20,56 @@ class LailaNetApp extends StatelessWidget {
         primarySwatch: Colors.cyan,
         scaffoldBackgroundColor: const Color(0xFF101927),
       ),
-      home: const WelcomePage(),
+      home: const SplashScreen(),
+    );
+  }
+}
+
+// Halaman Pengecekan Sesi Awal
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginSession();
+  }
+
+  Future<void> _checkLoginSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPhone = prefs.getString('user_phone');
+
+    await Future.delayed(const Duration(seconds: 1)); // Efek loading sebentar
+
+    if (!mounted) return;
+
+    if (savedPhone != null && savedPhone.isNotEmpty) {
+      // Jika sudah pernah login, langsung ke menu utama
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigation()),
+      );
+    } else {
+      // Jika belum, ke halaman Welcome / Login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const WelcomePage()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Color(0xFF101927),
+      body: Center(
+        child: CircularProgressIndicator(color: Colors.cyan),
+      ),
     );
   }
 }
@@ -34,8 +84,9 @@ class WelcomePage extends StatefulWidget {
 class _WelcomePageState extends State<WelcomePage> {
   final TextEditingController _phoneController = TextEditingController();
 
-  void _login() {
-    if (_phoneController.text.trim().isEmpty) {
+  Future<void> _login() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Masukkan nomor telepon terlebih dahulu!'),
@@ -45,7 +96,13 @@ class _WelcomePageState extends State<WelcomePage> {
       return;
     }
 
-    // Masuk ke halaman utama (MainNavigation)
+    // Simpan nomor HP ke SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_phone', phone);
+
+    if (!mounted) return;
+
+    // Masuk ke halaman utama
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const MainNavigation()),
@@ -136,7 +193,6 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 }
 
-// Widget utama pengatur navigasi bawah (VPN, Toko, Akun)
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
