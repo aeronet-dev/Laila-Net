@@ -25,7 +25,6 @@ class LailaNetApp extends StatelessWidget {
   }
 }
 
-// 1. Pengecekan Sesi Login saat Aplikasi Dibuka
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -44,18 +43,16 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
 
-    await Future.delayed(const Duration(seconds: 1)); // Efek splash
+    await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
 
     if (isLoggedIn) {
-      // Jika sudah terdaftar/login, langsung ke Dasbor Utama
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainNavigation()),
       );
     } else {
-      // Jika belum login / habis logout, ke Halaman Auth
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),
@@ -74,7 +71,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-// 2. Halaman Auth (Daftar / Masuk Akun)
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
 
@@ -85,9 +81,8 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  bool _isRegister = true; // Toggle Daftar vs Masuk
+  bool _isRegister = true;
 
-  // Validasi Format Nomor HP Indonesia
   bool _isValidPhone(String phone) {
     final regExp = RegExp(r'^(\+62|62|0)8[1-9][0-9]{7,11}$');
     return regExp.hasMatch(phone);
@@ -107,7 +102,6 @@ class _AuthPageState extends State<AuthPage> {
       return;
     }
 
-    // Simpan Akun secara Permanen di HP
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', true);
     await prefs.setString('user_phone', phone);
@@ -159,23 +153,15 @@ class _AuthPageState extends State<AuthPage> {
                 const SizedBox(height: 20),
                 Text(
                   _isRegister ? 'Daftar Akun Laila Net' : 'Masuk ke Laila Net',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _isRegister
-                      ? 'Buat akun sekali untuk menikmati koneksi aman.'
-                      : 'Masukkan nomor HP terdaftar Anda.',
+                  _isRegister ? 'Buat akun sekali untuk menikmati koneksi aman.' : 'Masukkan nomor HP terdaftar Anda.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.grey, fontSize: 13),
                 ),
                 const SizedBox(height: 28),
-
-                // Input Nama (Hanya saat Registrasi)
                 if (_isRegister) ...[
                   TextField(
                     controller: _nameController,
@@ -186,16 +172,11 @@ class _AuthPageState extends State<AuthPage> {
                       filled: true,
                       fillColor: const Color(0xFF1E293B),
                       prefixIcon: const Icon(Icons.person, color: Colors.cyan),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     ),
                   ),
                   const SizedBox(height: 14),
                 ],
-
-                // Input Nomor HP
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
@@ -206,39 +187,26 @@ class _AuthPageState extends State<AuthPage> {
                     filled: true,
                     fillColor: const Color(0xFF1E293B),
                     prefixIcon: const Icon(Icons.phone, color: Colors.cyan),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Tombol Submit
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.cyan,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: _handleAuth,
                     child: Text(
                       _isRegister ? 'Daftar Sekarang' : 'Masuk',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Switcher Mode (Daftar / Masuk)
                 TextButton(
                   onPressed: () {
                     setState(() {
@@ -246,9 +214,7 @@ class _AuthPageState extends State<AuthPage> {
                     });
                   },
                   child: Text(
-                    _isRegister
-                        ? 'Sudah punya akun? Masuk di sini'
-                        : 'Belum punya akun? Daftar di sini',
+                    _isRegister ? 'Sudah punya akun? Masuk di sini' : 'Belum punya akun? Daftar di sini',
                     style: const TextStyle(color: Colors.cyan),
                   ),
                 ),
@@ -261,7 +227,6 @@ class _AuthPageState extends State<AuthPage> {
   }
 }
 
-// 3. Sistem Navigasi Utama (Hanya 1 BottomNavBar)
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -281,10 +246,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF101927),
         selectedItemColor: Colors.cyan,
