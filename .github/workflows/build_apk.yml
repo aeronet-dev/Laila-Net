@@ -27,12 +27,15 @@ jobs:
 
     - name: Create Clean Flutter Project
       run: |
-        flutter create . --org com.lailanet --project-name laila_net --platforms android
+        flutter create . --org com.laila.net --project-name laila_net --platforms android
         rm -rf lib/*
         git checkout lib/
 
     - name: Get Dependencies
       run: flutter pub get
+
+    - name: Generate App Launcher Icons
+      run: flutter pub run flutter_launcher_icons
 
     - name: Build Debug APK
       run: flutter build apk --debug
