@@ -71,7 +71,7 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  Future<void> _toggleVpnConnection() async {
+    Future<void> _toggleVpnConnection() async {
     if (_remainingSeconds <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -104,7 +104,6 @@ class _DashboardPageState extends State<DashboardPage> {
         await flutterV2ray.startV2Ray(
           remark: "Laila Net VLESS",
           config: _vlessConfig,
-          proxyPort: 10808,
           bypassSubnets: [],
         );
         _startTimer();
