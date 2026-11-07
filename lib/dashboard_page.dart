@@ -10,49 +10,68 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserver {
   bool _isConnected = false;
   int _remainingSeconds = 0;
   Timer? _countdownTimer;
+  Timer? _syncTimer;
   
   late FlutterV2ray flutterV2ray;
   bool _isV2rayReady = false;
 
-  // Masukkan link VLESS dari panel 3x-ui Anda di sini:
   final String _vlessConfig = "vless://1d643b7c-dbfe-496a-afa9-6af2326ab510@aeronet-dev.github.io:443?encryption=none&security=tls&type=ws&path=%2F#LailaNet-VLESS";
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUserData();
     _initV2RayCore();
+    // Sinkronkan data tiap 1 detik untuk memastikan perubahan dari tab Toko langsung terlihat
+    _syncTimer = Timer.periodic(const Duration(seconds: 1), (_) => _loadUserData());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _countdownTimer?.cancel();
+    _syncTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUserData();
+    }
   }
 
   void _initV2RayCore() async {
     flutterV2ray = FlutterV2ray(
       onStatusChanged: (status) {
-        setState(() {
-          _isConnected = status.state == "CONNECTED";
-        });
+        if (mounted) {
+          setState(() {
+            _isConnected = status.state == "CONNECTED";
+          });
+        }
       },
     );
     await flutterV2ray.initializeV2Ray();
-    setState(() {
-      _isV2rayReady = true;
-    });
-  }
-
-  @override
-  void dispose() {
-    _countdownTimer?.cancel();
-    super.dispose();
+    if (mounted) {
+      setState(() {
+        _isV2rayReady = true;
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _remainingSeconds = prefs.getInt('remaining_seconds') ?? 0;
-    });
+    final savedSeconds = prefs.getInt('remaining_seconds') ?? 0;
+    if (mounted && savedSeconds != _remainingSeconds) {
+      setState(() {
+        _remainingSeconds = savedSeconds;
+      });
+    }
   }
 
   void _startTimer() {
@@ -71,8 +90,11 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-    Future<void> _toggleVpnConnection() async {
+  Future<void> _toggleVpnConnection() async {
+    await _loadUserData(); // Pastikan data terbaru sebelum menghubungkan
+
     if (_remainingSeconds <= 0) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Masa aktif habis! Silakan klaim Free Trial atau beli voucher di menu Toko.'),
@@ -83,6 +105,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     if (!_isV2rayReady) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Menyiapkan Engine VLESS...'), backgroundColor: Colors.orange),
       );
