@@ -19,7 +19,7 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   late FlutterV2ray flutterV2ray;
   bool _isV2rayReady = false;
 
-  final String _vlessConfig = "vless://1d643b7c-dbfe-496a-afa9-6af2326ab510@aeronet-dev.github.io:443?encryption=none&security=tls&type=ws&path=%2F#LailaNet-VLESS";
+  final String _vlessConfig = "vless://1d643b7c-dbfe-496a-afa9-6af2326ab510@103.55.36.173:443?encryption=none&security=none&type=tcp#LailaNet-VLESS";
 
   @override
   void initState() {
